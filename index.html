@@ -1,63 +1,23 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Lieferkarte Deutschland (iPad)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lieferkarte Deutschland</title>
 
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet für Karte -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <!-- PDF.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script>
-    // worker (CDN)
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    }
-  </script>
+  <script src="https://unpkg.com/pdfjs-dist/build/pdf.min.js"></script>
 
+  <!-- Style -->
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div id="sidebar">
-    <h2>Neuen Auftrag</h2>
-    <form id="uploadForm">
-      <label>PDF (Auftrag/Beleg):</label>
-      <input type="file" name="pdf" accept="application/pdf" required />
-
-      <label>Ticketnummer (optional):</label>
-      <input type="text" name="ticket" placeholder="Ticketnummer"/>
-
-      <label>Auftragsnummer (optional):</label>
-      <input type="text" name="auftrag" placeholder="Auftragsnummer"/>
-
-      <label>Status:</label>
-      <select name="status">
-        <option value="low">Grün — noch nicht eilen</option>
-        <option value="medium">Orange — mittel</option>
-        <option value="high">Rot — eilig</option>
-      </select>
-
-      <button type="submit">Hochladen & anzeigen</button>
-    </form>
-
-    <hr/>
-    <h3>Legende</h3>
-    <ul>
-      <li><span class="dot green"></span>Grün — neu</li>
-      <li><span class="dot orange"></span>Orange — mittel</li>
-      <li><span class="dot red"></span>Rot — eilig</li>
-    </ul>
-
-    <hr/>
-    <h3>Einträge</h3>
-    <div id="entries"></div>
-
-    <hr/>
-    <button id="downloadJson">Exportiere lokale Einträge (JSON)</button>
-  </div>
+  <h2>Lieferadresse automatisch erkennen</h2>
+  <input type="file" id="pdfInput" accept="application/pdf" />
 
   <div id="map"></div>
 
