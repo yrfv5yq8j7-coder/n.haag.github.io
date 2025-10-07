@@ -1,14 +1,5 @@
-// Karte initialisieren
-const map = L.map('map').setView([51.1657, 10.4515], 6);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-// Array für alle Marker
 let markers = [];
 
-// Event: PDF hochladen
 document.getElementById('pdfInput').addEventListener('change', async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -16,6 +7,7 @@ document.getElementById('pdfInput').addEventListener('change', async (event) => 
   // Alte Marker entfernen
   markers.forEach(m => map.removeLayer(m));
   markers = [];
+  map.setView([51.1657, 10.4515], 6); // Deutschland zentrieren
 
   // PDF auslesen
   const arrayBuffer = await file.arrayBuffer();
@@ -25,35 +17,48 @@ document.getElementById('pdfInput').addEventListener('change', async (event) => 
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-    text += content.items.map(i => i.str).join(' ');
+    text += content.items.map(i => i.str).join(' ') + ' ';
   }
 
-  // Adresse erkennen (einfacher Ansatz: PLZ + Stadt)
-  const addressMatch = text.match(/\d{5}\s+[A-ZÄÖÜa-zäöüß]+/);
-  if (!addressMatch) {
-    alert("Keine Adresse gefunden 😕");
-    return;
-  }
+  // Daten automatisch extrahieren
+  const adresseMatch = text.match(/\d{5}\s+[A-ZÄÖÜa-zäöüß]+/); // PLZ+Stadt
+  const zrdMatch = text.match(/ZRD[:\s]*([\w-]+)/i);
+  const gerätMatch = text.match(/Gerätenummer[:\s]*([\w-]+)/i);
 
-  const address = addressMatch[0];
-  console.log("Gefundene Adresse:", address);
+  if (!adresseMatch) { alert("Keine Adresse gefunden 😕"); return; }
 
-  // Adresse geokodieren mit Nominatim
+  const address = adresseMatch[0];
+  const zrd = zrdMatch ? zrdMatch[1] : "–";
+  const geraet = gerätMatch ? gerätMatch[1] : "–";
+
+  // Adresse geokodieren
   const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Deutschland')}`);
   const data = await response.json();
-
-  if (!data.length) {
-    alert("Adresse nicht gefunden 😕");
-    return;
-  }
+  if (!data.length) { alert("Adresse nicht gefunden 😕"); return; }
 
   const { lat, lon, display_name } = data[0];
 
-  // Marker setzen
-  const marker = L.marker([lat, lon]).addTo(map)
-    .bindPopup(`📍 ${display_name}`)
-    .openPopup();
-
+  // Marker setzen mit Popup und OK-Schaltfläche
+  const marker = L.marker([lat, lon]).addTo(map);
   markers.push(marker);
+
+  const popupContent = document.createElement('div');
+  popupContent.innerHTML = `
+    <b>${display_name}</b><br>
+    ZRD: ${zrd}<br>
+    Gerätenummer: ${geraet}<br>
+  `;
+
+  const okButton = document.createElement('button');
+  okButton.textContent = "OK";
+  okButton.style.marginTop = "5px";
+  okButton.onclick = () => {
+    alert(`Eintrag für ZRD ${zrd} bestätigt ✅`);
+    marker.closePopup();
+  };
+
+  popupContent.appendChild(okButton);
+  marker.bindPopup(popupContent).openPopup();
+
   map.setView([lat, lon], 12);
-});;
+});
