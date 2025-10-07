@@ -1,5 +1,17 @@
+// PDF.js Worker definieren
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist/build/pdf.worker.min.js';
+
+// Karte initialisieren
+const map = L.map('map').setView([51.1657, 10.4515], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+// Array für Marker
 let markers = [];
 
+// PDF-Upload Event
 document.getElementById('pdfInput').addEventListener('change', async (event) => {
   const file = event.target.files[0];
   if (!file) return;
@@ -21,24 +33,31 @@ document.getElementById('pdfInput').addEventListener('change', async (event) => 
   }
 
   // Daten automatisch extrahieren
-  const adresseMatch = text.match(/\d{5}\s+[A-ZÄÖÜa-zäöüß]+/); // PLZ+Stadt
+  const adresseMatch = text.match(/\d{5}\s+[A-ZÄÖÜa-zäöüß]+/); // einfache PLZ+Stadt-Erkennung
   const zrdMatch = text.match(/ZRD[:\s]*([\w-]+)/i);
   const gerätMatch = text.match(/Gerätenummer[:\s]*([\w-]+)/i);
 
-  if (!adresseMatch) { alert("Keine Adresse gefunden 😕"); return; }
+  if (!adresseMatch) { 
+    alert("Keine Adresse gefunden 😕"); 
+    return; 
+  }
 
   const address = adresseMatch[0];
   const zrd = zrdMatch ? zrdMatch[1] : "–";
   const geraet = gerätMatch ? gerätMatch[1] : "–";
 
-  // Adresse geokodieren
+  // Adresse geokodieren über OpenStreetMap
   const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Deutschland')}`);
   const data = await response.json();
-  if (!data.length) { alert("Adresse nicht gefunden 😕"); return; }
+
+  if (!data.length) {
+    alert("Adresse nicht gefunden 😕");
+    return;
+  }
 
   const { lat, lon, display_name } = data[0];
 
-  // Marker setzen mit Popup und OK-Schaltfläche
+  // Marker setzen mit Popup + OK-Button
   const marker = L.marker([lat, lon]).addTo(map);
   markers.push(marker);
 
